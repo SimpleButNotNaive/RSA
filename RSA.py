@@ -13,21 +13,29 @@ class RSA:
         self.n = p*q
         self.phi_n = (p - 1)*(q - 1)
         self.b = RSA.calc_inverse(self.phi_n, self.a)
+        logging.info("RSA初始化完毕")
+        logging.info("私钥：")
+        logging.info("p:\n%d", self.p)
+        logging.info("q:\n%d", self.q)
+        logging.info("a:\n%d", self.a)
+        logging.info("公钥：")
+        logging.info("b:\n%d", self.b)
+        logging.info("n:\n%d", self.n)
 
     def encrypt(self, plain_text):
-        logging.info("明文：%s", plain_text) 
+        logging.info("明文：\n%s", plain_text) 
         M = RSA.padding(plain_text)
-        logging.info("明文填充后的2048比特数：%d", M)
+        logging.info("明文填充后的2048比特数：\n%d", M)
         cipher = RSA.modular_exponent(M, self.b, self.n)
-        logging.info("密文：%d", cipher)
+        logging.info("密文：\n%d", cipher)
         return cipher
 
     def decrypt(self, cipher):
-        logging.info("待解密密文：%d", cipher)
+        logging.info("待解密密文：\n%d", cipher)
         M = RSA.modular_exponent(cipher, self.a, self.n)
-        logging.info("解密得到的2048比特数：%d", M)
+        logging.info("解密得到的2048比特数：\n%d", M)
         plaint_text = RSA.strip(M)
-        logging.info("去除填充后得到的明文：%s", plaint_text)
+        logging.info("去除填充后得到的明文：\n%s", plaint_text)
         return plaint_text
 
     @staticmethod
