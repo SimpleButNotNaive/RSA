@@ -5,6 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
+
 class RSA:
     def __init__(self, p, q, a):
         self.p = p
@@ -22,8 +23,13 @@ class RSA:
         logging.info("b:\n%d", self.b)
         logging.info("n:\n%d", self.n)
 
+        self.q_inv = RSA.calc_inverse(p, q)
+        self.p_inv = RSA.calc_inverse(q, p)
+        self.dp = self.a % (p - 1)
+        self.dq = self.a % (q - 1)
+
     def encrypt(self, plain_text):
-        logging.info("明文：\n%s", plain_text) 
+        logging.info("明文：\n%s", plain_text)
         M = RSA.padding(plain_text)
         logging.info("明文填充后的2048比特数：\n%d", M)
         cipher = RSA.modular_exponent(M, self.b, self.n)
@@ -32,16 +38,22 @@ class RSA:
 
     def decrypt(self, cipher):
         logging.info("待解密密文：\n%d", cipher)
-        M = RSA.modular_exponent(cipher, self.a, self.n)
+        M = self.do_decrypt(cipher)
         logging.info("解密得到的2048比特数：\n%d", M)
         plaint_text = RSA.strip(M)
         logging.info("去除填充后得到的明文：\n%s", plaint_text)
         return plaint_text
 
+    def do_decrypt(self, cipher):
+        c_1 = RSA.modular_exponent(cipher, self.dp, self.p)
+        c_2 = RSA.modular_exponent(cipher, self.dq, self.q)
+
+        return ((c_1*self.q_inv*self.q % self.n) + (c_2*self.p_inv*self.p % self.n)) % self.n
+
     @staticmethod
     def calc_inverse(n, ele):
         a = n
-        b = ele
+        b = ele % n
         t_0 = 0
         t = 1
         q = a // b
@@ -72,7 +84,8 @@ class RSA:
     def padding(message: str):
         assert len(message) <= 128
 
-        message_bytes = RSA.integer_to_bytes(RSA.bytes_to_integer(message.encode("utf-8")))
+        message_bytes = RSA.integer_to_bytes(
+            RSA.bytes_to_integer(message.encode("utf-8")))
         random_integer_bytes = RSA.integer_to_bytes(getrandbits(1024))
 
         left_part = RSA.bytes_xor(message_bytes, RSA.H(random_integer_bytes))
