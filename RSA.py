@@ -130,11 +130,15 @@ class RSA:
     @staticmethod
     def H(data):
         hash_func = sha1()
-        for _ in range(6):
-            hash_func.update(data)
-            data = hash_func.digest()
-            hash_func = sha1()
-        result = RSA.integer_to_bytes(RSA.bytes_to_integer(data))
+        hash_func.update(data)
+        data = hash_func.digest()
+
+        data_array = bytearray(128)
+        for i in range(6):
+            for j in range(20):
+                data_array[127 - (20*i + j)] = data[j]
+
+        result = RSA.integer_to_bytes(RSA.bytes_to_integer(data_array))
 
         assert len(result) == 128
         return result
