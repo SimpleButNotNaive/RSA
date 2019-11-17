@@ -1,6 +1,7 @@
 from random import getrandbits
-from hashlib import sha1
 import logging
+import sha1
+
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -129,10 +130,7 @@ class RSA:
 
     @staticmethod
     def H(data):
-        hash_func = sha1()
-        hash_func.update(data)
-        data = hash_func.digest()
-
+        data = sha1.sha1(data)
         data_array = bytearray(128)
         for i in range(6):
             for j in range(20):

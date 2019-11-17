@@ -3,35 +3,27 @@ import hashlib
 top = 0xffffffff
 
 
+def sha1(msg):
 
-def rotl(i, n):
-    lmask = top << (32-n)
-    rmask = top >> n
-    l = i & lmask
-    r = i & rmask
-    newl = r << n
-    newr = l >> (32-n)
-    return newl + newr
-
-
-def add(l):
-    ret = 0
-    for e in l:
-        ret = (ret + e) & top
-    return ret
-
-
-def sha1_impl(msg, h0, h1, h2, h3, h4):
+    msg = pad(msg)
+    h0 = 0x67452301
+    h1 = 0xefcdab89
+    h2 = 0x98badcfe
+    h3 = 0x10325476
+    h4 = 0xc3d2e1f0
 
     for j in range(len(msg) // 64):
         chunk = msg[j * 64: (j+1) * 64]
 
         w = {}
         for i in range(16):
+            # 将一个chunk分为16个字
             word = chunk[i*4: (i+1)*4]
             (w[i],) = struct.unpack(">i", word)
+            # 按照大端序，将word(bytes类型)转换为int类型
 
         for i in range(16, 80):
+            # 按照之前已有的字生成新的字
             w[i] = rotl((w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16]) & top, 1)
 
         a = h0
@@ -67,27 +59,49 @@ def sha1_impl(msg, h0, h1, h2, h3, h4):
         h3 = add([h3, d])
         h4 = add([h4, e])
 
-    return (hex(h0), hex(h1), hex(h2), hex(h3), hex(h4))
+    h_list = [h0, h1, h2, h3, h4]
+    ret = bytes()
+    for h in h_list:
+        ret += h.to_bytes(4, "big", signed=False)
+
+    return ret
 
 
 def pad(msg):
     sz = len(msg)
-    bits = sz * 8
-    padding = 512 - ((bits + 8) % 512) - 64
+    bits_number = sz * 8
+    padding = 512 - ((bits_number + 8) % 512) - 64
 
-    msg += bytes.fromhex("80")  # append bit "1", and a few zeros.
-    # don't count the \x80 here, hence the -8.
-    return msg + (padding // 8) * bytes.fromhex("00") + struct.pack(">q", bits)
+    return msg + bytes.fromhex("80")\
+        + (padding // 8) * bytes.fromhex("00") + struct.pack(">Q", bits_number)
 
 
-def sha1(msg):
-    return sha1_impl(pad(msg), 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0)
+def rotl(i, n):
+    # 循环左移
+    lmask = top << (32-n)
+    rmask = top >> n
+    # 由于python的int没有长度限制，因此不能简单地移位
+    l = i & lmask
+    r = i & rmask
+    newl = r << n
+    newr = l >> (32-n)
+    return newl + newr
+
+
+def add(l):
+    # 将列表l中的元素模2^32加
+    ret = 0
+    for e in l:
+        ret = (ret + e) & top
+        # 通过与top相与保证结果的范围在0-2^32-1之内
+    return ret
+
 
 if __name__ == "__main__":
     sha_1_hash = hashlib.sha1()
-    data = "12345".encode("utf-8")
+    data = "12345".encode(
+        "utf-8")
 
     sha_1_hash.update(data)
     print(sha1(data))
-    print(sha_1_hash.hexdigest())
-    
+    print(sha_1_hash.digest())
