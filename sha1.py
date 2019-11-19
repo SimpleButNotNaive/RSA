@@ -60,11 +60,12 @@ def sha1(msg):
         h4 = add([h4, e])
 
     h_list = [h0, h1, h2, h3, h4]
-    ret = bytes()
-    for h in h_list:
-        ret += h.to_bytes(4, "big", signed=False)
+    h_bytes_list = []
 
-    return ret
+    for h in h_list:
+        h_bytes_list.append(h.to_bytes(4, "big", signed=False))
+
+    return b"".join(h_bytes_list)
 
 
 def pad(msg):
@@ -99,8 +100,7 @@ def add(l):
 
 if __name__ == "__main__":
     sha_1_hash = hashlib.sha1()
-    data = "12345".encode(
-        "utf-8")
+    data = "12345".encode("utf-8")
 
     sha_1_hash.update(data)
     print(sha1(data))

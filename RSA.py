@@ -87,7 +87,9 @@ class RSA:
 
         message_bytes = RSA.integer_to_bytes(
             RSA.bytes_to_integer(message.encode("utf-8")))
-        random_integer_bytes = RSA.integer_to_bytes(getrandbits(1024))
+        r = getrandbits(1024)
+        logging.info("这次加密使用的随机数r:\n%d", r)
+        random_integer_bytes = RSA.integer_to_bytes(r)
 
         left_part = RSA.bytes_xor(message_bytes, RSA.H(random_integer_bytes))
         right_part = RSA.bytes_xor(RSA.H(left_part), random_integer_bytes)
@@ -130,13 +132,12 @@ class RSA:
 
     @staticmethod
     def H(data):
-        data = sha1.sha1(data)
-        data_array = bytearray(128)
-        for i in range(6):
-            for j in range(20):
-                data_array[127 - (20*i + j)] = data[j]
+        chunk_list = [(128 - 20*6)*b"\x00"]
+        for _ in range(6):
+            data = sha1.sha1(data)
+            chunk_list.append(data)
 
-        result = RSA.integer_to_bytes(RSA.bytes_to_integer(data_array))
+        ret = b"".join(chunk_list)
 
-        assert len(result) == 128
-        return result
+        assert len(ret) == 128
+        return ret
